@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "dif17-analysis-agreement"
+version = "0.1.0"
+description = ""
+authors = ["오의섭 <ohus1989@naver.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = ">=3.11,<4.0"
+requests = "^2.32.3"
+psycopg2 = "^2.9.10"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
