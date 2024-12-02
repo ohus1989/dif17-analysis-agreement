@@ -9,6 +9,10 @@ readme = "README.md"
 python = ">=3.11,<4.0"
 requests = "^2.32.3"
 psycopg2 = "^2.9.10"
+tqdm = "^4.67.1"
+streamlit = "^1.40.2"
+streamlit-aggrid = "^1.0.5"
+fastapi = "^0.115.5"
 
 
 [build-system]
