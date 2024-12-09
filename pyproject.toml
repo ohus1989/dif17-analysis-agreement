@@ -13,6 +13,10 @@ tqdm = "^4.67.1"
 streamlit = "^1.40.2"
 streamlit-aggrid = "^1.0.5"
 fastapi = "^0.115.5"
+uvicorn = "^0.32.1"
+langchain-experimental = "^0.3.3"
+openai = "^1.56.1"
+redis = "^5.2.0"
 
 
 [build-system]
