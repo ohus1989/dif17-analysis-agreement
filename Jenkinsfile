@@ -50,7 +50,7 @@ pipeline {
                     exit 1
                 fi
                 cd "$INSTALL_SRC"
-                poetry install --no-root
+                poetry install
                 '''
             }
         }
