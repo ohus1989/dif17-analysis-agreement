@@ -7,6 +7,18 @@ pipeline {
         POETRY_VIRTUALENVS_IN_PROJECT = "true"
     }
     stages {
+        stage('Check and Install Poetry') {
+                steps {
+                    sh '''
+                    if ! [ -x "$(command -v poetry)" ]; then
+                        echo "Poetry not found. Installing..."
+                        curl -sSL https://install.python-poetry.org | python3 -
+                    else
+                        echo "Poetry already installed"
+                    fi
+                    '''
+                }
+            }
 //         stage('Install Poetry') {
 //             steps {
 //                 sh '''
