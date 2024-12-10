@@ -84,7 +84,7 @@ pipeline {
         stage('프로젝트 실행') {
             steps {
                 sh '''
-                echo "Starting dif17-chat-llm project..."
+                echo "Starting dif17-analysis-agreement project..."
 
                 DIR=$PWD
                 echo "Current working directory: $DIR"
