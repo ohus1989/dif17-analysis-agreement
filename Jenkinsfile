@@ -8,6 +8,7 @@ pipeline {
         SRC = "/var/lib/jenkins/workspace/dif17-analysis-agreement"
         DEST = "/opt/"
         INSTALL_SRC = "/opt/dif17-analysis-agreement"
+        PORT =8003
     }
     stages {
         stage('Check and Install Poetry') {
@@ -59,21 +60,8 @@ pipeline {
                 sh '''
                 echo "Killing existing dif17-analysis-agreement processes..."
                 # Kill all related processes
-                PROCESSES=$(ps -aux | grep dif17-analysis-agreement | grep -v grep | awk '{ print $2 }')
-                if [ -n "$PROCESSES" ]; then
-                    echo "Found processes: $PROCESSES"
-                    sudo kill -9 $PROCESSES || echo "Failed to kill some processes"
-                else
-                    echo "No matching processes found"
-                fi
+                ps -aux | grep dif17-analysis-agreement
 
-                # Kill inotifywait process if exists
-                if pgrep inotifywait > /dev/null; then
-                    echo "Killing inotifywait process"
-                    sudo killall inotifywait || echo "Failed to kill inotifywait process"
-                else
-                    echo "No inotifywait process found"
-                fi
                 '''
             }
         }
@@ -99,7 +87,7 @@ pipeline {
                 echo "Changed directory to: $PWD"
 
                 # Start the uvicorn server
-                if ! sudo nohup poetry run uvicorn main:app --reload --port=8002 > $INSTALL_SRC/nohup.out 2>&1 & then
+                if ! sudo nohup poetry run uvicorn main:app --reload --port=$PORT > $INSTALL_SRC/nohup.out 2>&1 & then
                     echo "Failed to start uvicorn server"
                     exit 1
                 else
