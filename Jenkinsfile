@@ -101,7 +101,7 @@ pipeline {
                 echo "Changed directory to: $PWD"
 
                 # Start the uvicorn server
-                if ! sudo nohup poetry run uvicorn main:app --reload --port=$PORT > $INSTALL_SRC/nohup.out 2>&1 & then
+                if ! nohup poetry run uvicorn main:app --reload --port=$PORT > $INSTALL_SRC/nohup.out 2>&1 & then
                     echo "Failed to start uvicorn server"
                     exit 1
                 else
