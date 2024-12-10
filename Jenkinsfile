@@ -15,6 +15,7 @@ pipeline {
                         curl -sSL https://install.python-poetry.org | python3 -
                     else
                         echo "Poetry already installed"
+                        poetry --version
                     fi
                     '''
                 }

@@ -36,7 +36,6 @@ def fetch_data(name=None, sale_date=None, p_code=None):
         "sale_date": sale_date,
         "p_code": p_code,
     }
-
     try:
         with psycopg2.connect(**DB_CONFIG) as conn:
             with conn.cursor() as cur:
