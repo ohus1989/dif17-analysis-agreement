@@ -1,13 +1,12 @@
 import logging
 import os
-from typing import Optional
+from http import HTTPStatus
 
 import psycopg2
 import psycopg2.extras
 import requests
-from fastapi import APIRouter
+from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
-from http import HTTPStatus
 from pydantic import BaseModel, Field
 from requests import get
 
@@ -29,11 +28,12 @@ async def root():
 
 
 @router.post("/insurance/")
-async def get_primary_insurance_product(name: str = None, sale_date: str = None, p_code: str = None):
+async def get_primary_insurance_product(request: Request):
+    body = await request.json()
     insurance_product = {
-        "name": name,
-        "sale_date": sale_date,
-        "p_code": p_code,
+        "name": body.get("name"),
+        "sale_date": body.get("sale_date"),
+        "p_code": body.get("p_code"),
     }
     query = """
         SELECT A.*,
@@ -53,14 +53,15 @@ async def get_primary_insurance_product(name: str = None, sale_date: str = None,
                                      ON A.seqno = B_2.seqno
                                          AND B_2.file_index = '2'
                                          AND A.upfile2 IS NOT NULL
-            WHERE (%(name)s ='' OR %(name)s IS NULL OR A.TYPENAME LIKE CONCAT('%%', %(name)s, '%%'))
-              AND (%(sale_date)s IS NULL OR 
-                   (
-                       COALESCE(NULLIF(TRIM(split_part(A.sale_date, '~', 1)), ''), NULL)::date <= %(sale_date)s::date
-                       AND %(sale_date)s::date <= COALESCE(NULLIF(TRIM(split_part(A.sale_date, '~', 2)), ''), '9999-12-31')::date
-                   )
-              )
-              AND (%(p_code)s = '' OR %(p_code)s IS NULL OR A.p_code = %(p_code)s)
+            WHERE (COALESCE(NULLIF(%(name)s, ''), NULL) IS NULL OR A.TYPENAME LIKE CONCAT('%%', %(name)s, '%%'))
+  AND (COALESCE(NULLIF(%(sale_date)s, ''), NULL) IS NULL OR 
+       (
+           -- 빈 문자열을 NULL로 처리한 후 날짜 비교
+           COALESCE(NULLIF(TRIM(split_part(A.sale_date, '~', 1)), ''), '1900-01-01')::date <= COALESCE(NULLIF(%(sale_date)s, ''), '9999-12-31')::date
+           AND COALESCE(NULLIF(%(sale_date)s, ''), '1900-01-01')::date <= COALESCE(NULLIF(TRIM(split_part(A.sale_date, '~', 2)), ''), '9999-12-31')::date
+       )
+  )
+  AND (COALESCE(NULLIF(%(p_code)s, ''), NULL) IS NULL OR A.p_code = %(p_code)s)
     """
     try:
         with psycopg2.connect(**DB_CONFIG) as conn:
@@ -172,7 +173,11 @@ async def get_primary_insurance_product_file(params: FileQueryParams):
     exist_data = get_file_exist(exist_data_info)
     if exist_data and os.path.exists(exist_data['file_path']):
         return exist_data['file_path']
-    url = f'https://www.kblife.co.kr/api/archive/archives/download/product-explain/{params.seqno}/{params.file_index}'
+
+    if params.file_index =='2':
+        url = f'https://www.kblife.co.kr/api/archive/archives/download/product-terms/{params.seqno}/{params.file_index}'
+    else:
+        url = f'https://www.kblife.co.kr/api/archive/archives/download/product-explain/{params.seqno}/{params.file_index}'
     # 파일 다운로드 요청
 
     # 다운로드 경로 설정
