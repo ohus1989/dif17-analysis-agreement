@@ -5,10 +5,12 @@ pipeline {
         PATH = "${WORKSPACE}/.poetry/bin:${PATH}"
         POETRY_CACHE_DIR = "${WORKSPACE}/.cache/pypoetry"
         POETRY_VIRTUALENVS_IN_PROJECT = "true"
-        SRC = "/var/lib/jenkins/workspace/dif17-analysis-agreement"
+        PROJECT_NAME="dif17-analysis-agreement"
+        SRC = "/var/lib/jenkins/workspace/${PROJECT_NAME}"
         DEST = "/opt/"
-        INSTALL_SRC = "/opt/dif17-analysis-agreement"
+        INSTALL_SRC = "/opt/${PROJECT_NAME}"
         PORT=8003
+        SERVER_PID_FILE = "/opt/${PROJECT_NAME}/server.pid"
     }
     stages {
         stage('Check and Install Poetry') {
@@ -82,7 +84,7 @@ pipeline {
         stage('프로젝트 실행') {
             steps {
                 sh '''
-                echo "Starting dif17-analysis-agreement project..."
+                echo "Starting dif17-chat-llm project..."
 
                 DIR=$PWD
                 echo "Current working directory: $DIR"
@@ -94,9 +96,15 @@ pipeline {
                 echo "Changed directory to: $PWD"
 
                 # Start the uvicorn server with nohup
-                echo "Starting server with nohup..."
                 nohup poetry run uvicorn main:app --reload --port=$PORT > $INSTALL_SRC/nohup.out 2>&1 &
-                SERVER_PID=$!
+
+                # PID 저장
+                echo $! > $SERVER_PID_FILE
+                SERVER_PID=$(cat $SERVER_PID_FILE)
+
+                # 프로세스를 Jenkins로부터 분리
+                disown $SERVER_PID
+                echo "Uvicorn server started with PID $SERVER_PID"
 
                 # Verify that the server started successfully
                 sleep 5
@@ -105,6 +113,25 @@ pipeline {
                 else
                     echo "Failed to start uvicorn server"
                     cat $INSTALL_SRC/nohup.out
+                    exit 1
+                fi
+                '''
+            }
+        }
+        stage('서버 상태 확인') {
+            steps {
+                sh '''
+                # 저장된 PID로 서버 상태 확인
+                if [ -f $SERVER_PID_FILE ]; then
+                    SERVER_PID=$(cat $SERVER_PID_FILE)
+                    if ps -p $SERVER_PID > /dev/null; then
+                        echo "Uvicorn server is running with PID $SERVER_PID"
+                    else
+                        echo "Uvicorn server is not running"
+                        exit 1
+                    fi
+                else
+                    echo "Server PID file not found"
                     exit 1
                 fi
                 '''
