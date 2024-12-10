@@ -5,7 +5,7 @@ pipeline {
         PATH = "${WORKSPACE}/.poetry/bin:${PATH}"
         POETRY_CACHE_DIR = "${WORKSPACE}/.cache/pypoetry"
         POETRY_VIRTUALENVS_IN_PROJECT = "true"
-        SRC = "/var/lib/jenkins/workspace/dif17-analysis-agreement-pipeline"
+        SRC = "/var/lib/jenkins/workspace/dif17-analysis-agreement"
         DEST = "/opt/"
         INSTALL_SRC = "/opt/dif17-analysis-agreement"
     }
