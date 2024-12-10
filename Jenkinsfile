@@ -96,14 +96,13 @@ pipeline {
                 echo "Changed directory to: $PWD"
 
                 # Start the uvicorn server with nohup
-                nohup poetry run uvicorn main:app --reload --port=$PORT > $INSTALL_SRC/nohup.out 2>&1 &
+                # 프로세스를 Jenkins로부터 분리
+                JENKINS_NODE_COOKIE=dontKillMe nohup poetry run uvicorn main:app --reload --port=$PORT > $INSTALL_SRC/nohup.out 2>&1 &
 
                 # PID 저장
                 echo $! > $SERVER_PID_FILE
                 SERVER_PID=$(cat $SERVER_PID_FILE)
 
-                # 프로세스를 Jenkins로부터 분리
-                disown $SERVER_PID
                 echo "Uvicorn server started with PID $SERVER_PID"
 
                 # Verify that the server started successfully
