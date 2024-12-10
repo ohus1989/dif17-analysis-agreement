@@ -93,10 +93,6 @@ pipeline {
                 fi
                 echo "Changed directory to: $PWD"
 
-                # Test uvicorn command directly
-                echo "Testing uvicorn command..."
-                poetry run uvicorn main:app --reload --port=$PORT || echo "Direct uvicorn test failed"
-
                 # Start the uvicorn server with nohup
                 echo "Starting server with nohup..."
                 nohup poetry run uvicorn main:app --reload --port=$PORT > $INSTALL_SRC/nohup.out 2>&1 &
