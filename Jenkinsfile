@@ -60,8 +60,22 @@ pipeline {
                 sh '''
                 echo "Killing existing dif17-analysis-agreement processes..."
                 # Kill all related processes
-                ps -aux | grep dif17-analysis-agreement
+                ps -aux | grep /opt/dif17-analysis-agreement
+                PROCESSES=$(ps -aux | grep /opt/dif17-analysis-agreement | grep -v grep | awk '{ print $2 }')
+                if [ -n "$PROCESSES" ]; then
+                    echo "Found processes: $PROCESSES"
+                    sudo kill -9 $PROCESSES || echo "Failed to kill some processes"
+                else
+                    echo "No matching processes found"
+                fi
 
+                # Kill inotifywait process if exists
+                if pgrep inotifywait > /dev/null; then
+                    echo "Killing inotifywait process"
+                    sudo killall inotifywait || echo "Failed to kill inotifywait process"
+                else
+                    echo "No inotifywait process found"
+                fi
                 '''
             }
         }
