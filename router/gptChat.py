@@ -15,12 +15,14 @@ from redis_config.openai_file_redis import get_data, save_data
 
 from fastapi.responses import StreamingResponse
 
+from vo.CustomResponse import CustomResponse, ErrorCode
+
 # 로깅 설정
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 router = APIRouter(
-    prefix="/v1/analysis/gpt",
+    prefix="/v2/analysis/gpt",
 )
 
 client = OpenAI()
@@ -71,7 +73,11 @@ def get_file_id(uploadFile: UploadFile):
 
 @router.post("/file/upload/", )
 def upload_file_openai(uploadFile: UploadFile):
-    return get_file_id(uploadFile)
+    response = (CustomResponse.builder() \
+                .set_data(get_file_id(uploadFile)) \
+                .set_code(ErrorCode.OK["code"]) \
+                .build())
+    return response
 
 
 @router.post("/file/upload/list/", )
@@ -79,7 +85,11 @@ def upload_file_openai(uploadFileList: List[UploadFile]):
     result = []
     for uploadFile in uploadFileList:
         result.append(get_file_id(uploadFile))
-    return result
+    response = (CustomResponse.builder() \
+                .set_data(result) \
+                .set_code(ErrorCode.OK["code"]) \
+                .build())
+    return response
 
 
 async def stream_assistant_response(assistant_id, thread_id):
@@ -123,7 +133,6 @@ async def ask_query(request: Request):
     prompt = body.get("prompt", "")
     thread_id = body.get("thread_id")
     assistant_id = body.get("assistant_id")
-
     # make sure thread exist
     client.beta.threads.messages.create(
         thread_id=thread_id,
@@ -142,16 +151,22 @@ def create_assistant(request: Request):
         model="gpt-4o",
         # tools=[{"type": "file_search"}],
     )
-
-    return assistant.id
+    response = (CustomResponse.builder() \
+                .set_data(assistant.id) \
+                .set_code(ErrorCode.OK["code"]) \
+                .build())
+    return response
 
 
 @router.post("/create/thread")
 def create_thread(request: Request):
     # 새로운 스레드 생성
     thread = client.beta.threads.create()
-
-    return thread.id
+    response = (CustomResponse.builder() \
+                .set_data(thread.id) \
+                .set_code(ErrorCode.OK["code"]) \
+                .build())
+    return response
 
 
 @router.post("/create/file/assistant")
@@ -162,8 +177,11 @@ def create_assistant_file_search(request: Request):
         model="gpt-4o",
         tools=[{"type": "file_search"}],
     )
-
-    return assistant.id
+    response = (CustomResponse.builder() \
+                .set_data(assistant.id) \
+                .set_code(ErrorCode.OK["code"]) \
+                .build())
+    return response
 
 
 @router.post("/create/file/thread")
@@ -182,5 +200,8 @@ async def create_thread_file_search(request: Request):
         attachments=attachments,
     )
     # 새로운 스레드 생성
-
-    return thread.id
+    response = (CustomResponse.builder() \
+                .set_data(thread.id) \
+                .set_code(ErrorCode.OK["code"]) \
+                .build())
+    return response

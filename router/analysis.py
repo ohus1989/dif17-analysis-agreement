@@ -12,13 +12,14 @@ from requests import get
 
 from config.dbConfig import DB_CONFIG
 from vo.InsuranceItemQueryParams import InsuranceItemQueryParams
+from vo.CustomResponse import CustomResponse, ErrorCode
 
 # 로깅 설정
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 router = APIRouter(
-    prefix="/v1/analysis/gpt",
+    prefix="/v2/analysis/gpt",
 )
 
 
@@ -70,7 +71,11 @@ async def get_primary_insurance_product(request: Request):
                 # 쿼리 로그 출력
                 logger.info("Executed query: %s", cur.query.decode('utf-8'))
                 rows = cur.fetchall()
-                return rows
+                response = (CustomResponse.builder() \
+                            .set_data(rows) \
+                            .set_code(ErrorCode.OK["code"]) \
+                            .build())
+                return response
     except Exception as e:
         return f"데이터베이스 오류: {e}"
 
@@ -111,7 +116,11 @@ async def get_primary_insurance_product(insuranceItemQueryParams: InsuranceItemQ
                 # 쿼리 로그 출력
                 logger.info("Executed query: %s", cur.query.decode('utf-8'))
                 row = cur.fetchone()
-                return row
+                response = (CustomResponse.builder() \
+                            .set_data(row) \
+                            .set_code(ErrorCode.OK["code"]) \
+                            .build())
+                return response
     except Exception as e:
         return f"데이터베이스 오류: {e}"
 
@@ -218,4 +227,8 @@ async def get_primary_insurance_product_file(params: FileQueryParams):
     insert_file_info(insert_info)
     print(f"File downloaded to: {file_path}")
 
-    return file_path
+    response = (CustomResponse.builder() \
+                .set_data(file_path) \
+                .set_code(ErrorCode.OK["code"]) \
+                .build())
+    return response
