@@ -8,7 +8,7 @@ pipeline {
         SRC = "/var/lib/jenkins/workspace/dif17-analysis-agreement"
         DEST = "/opt/"
         INSTALL_SRC = "/opt/dif17-analysis-agreement"
-        PORT =8003
+        PORT=8003
     }
     stages {
         stage('Check and Install Poetry') {
@@ -87,25 +87,29 @@ pipeline {
                 DIR=$PWD
                 echo "Current working directory: $DIR"
 
-                # Create config directory
-                if ! mkdir -p $DIR/config; then
-                    echo "Failed to create config directory"
-                    exit 1
-                fi
-
-                # Change to project directory
                 if ! cd $INSTALL_SRC; then
                     echo "Failed to change directory to $INSTALL_SRC"
                     exit 1
                 fi
                 echo "Changed directory to: $PWD"
 
-                # Start the uvicorn server
-                if ! nohup poetry run uvicorn main:app --reload --port=$PORT > $INSTALL_SRC/nohup.out 2>&1 & then
-                    echo "Failed to start uvicorn server"
-                    exit 1
+                # Test uvicorn command directly
+                echo "Testing uvicorn command..."
+                poetry run uvicorn main:app --reload --port=$PORT || echo "Direct uvicorn test failed"
+
+                # Start the uvicorn server with nohup
+                echo "Starting server with nohup..."
+                nohup poetry run uvicorn main:app --reload --port=$PORT > $INSTALL_SRC/nohup.out 2>&1 &
+                SERVER_PID=$!
+
+                # Verify that the server started successfully
+                sleep 5
+                if ps -p $SERVER_PID > /dev/null; then
+                    echo "Uvicorn server started successfully with PID $SERVER_PID"
                 else
-                    echo "Uvicorn server started successfully"
+                    echo "Failed to start uvicorn server"
+                    cat $INSTALL_SRC/nohup.out
+                    exit 1
                 fi
                 '''
             }
