@@ -5,8 +5,9 @@ from http import HTTPStatus
 import psycopg2
 import psycopg2.extras
 import requests
+import base64
 from fastapi import APIRouter, Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, FileResponse
 from pydantic import BaseModel, Field
 from requests import get
 
@@ -232,3 +233,45 @@ async def get_primary_insurance_product_file(params: FileQueryParams):
                 .set_code(ErrorCode.OK["code"]) \
                 .build())
     return response
+
+@router.get("/file/download/{seqno}/{file_index}")
+async def get_download_file(seqno: str, file_index: str):
+    exist_data_info = {
+        'seqno': seqno,
+        'file_index': file_index,
+    }
+    exist_data = get_file_exist(exist_data_info)
+    file_path = exist_data['file_path']
+
+    if os.path.exists(file_path):
+        # 파일 이름 추출
+        filename = os.path.basename(file_path)
+
+        # 파일 데이터를 Base64로 인코딩
+        with open(file_path, "rb") as f:
+            encoded_file = base64.b64encode(f.read()).decode("utf-8")
+
+        # CustomResponse 사용
+        response = (
+            CustomResponse.builder()
+            .set_data({"filename": filename, "file_content": encoded_file})
+            .set_code(ErrorCode.OK["code"])  # ErrorCode.OK["code"]
+            .set_message("File successfully retrieved")
+            .build()
+        )
+        return response
+    return {"error": "File not found"}
+
+@router.get("/file/download/{seqno}/{file_index}/{file_name}")
+async def get_download_file(seqno: str, file_index: str, file_name: str):
+    exist_data_info = {
+        'seqno': seqno,
+        'file_index': file_index,
+    }
+    decoded_file_name = file_name.encode('latin1').decode('utf-8')
+    exist_data = get_file_exist(exist_data_info)
+    file_path = exist_data['file_path']
+
+    if os.path.exists(file_path):
+        return FileResponse(file_path, media_type="application/octet-stream", filename=file_name, headers={"Content-Disposition": f"inline; filename={decoded_file_name}"})
+    return {"error": "File not found"}
