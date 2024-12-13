@@ -317,6 +317,7 @@ def check_attachments(thread_id, assistant_id, attachments):
 
     return check
 
+
 @router.post("/create/file/all")
 async def create_thread_file_search(uploadFileList: List[UploadFile]):
     file_list = []
@@ -330,17 +331,8 @@ async def create_thread_file_search(uploadFileList: List[UploadFile]):
     )
     assistant = client.beta.assistants.create(
         name="협약서 전문 분석가",
-        instructions="""You are a professional agreement analysis assistant and have access to files to answer questions about insurance documents.""",
-        model="gpt-4o",
-        tools=[{"type": "file_search"}],
-        tool_resources={"file_search": {"vector_store_ids": [vector_store.id]}},
-    )
-    # 새로운 스레드 생성
-    thread = client.beta.threads.create(
-        messages=[
-            {
-                "role": "assistant",
-                "content": """### 목적
+        description="문서가 입력이 되면 질문에 답변을 주는 협약서 전문 분석가",
+        instructions="""### 목적
 이 어시스턴트는 협약서를 전문적으로 분석하고, 사용자 질문에 정확히 답변하는 데 초점을 맞춥니다. 답변에는 지식 기반을 활용하며, 참조된 항목의 문서와 페이지 번호를 제공합니다.
 
 ### 대상 사용자
@@ -355,14 +347,23 @@ async def create_thread_file_search(uploadFileList: List[UploadFile]):
 - 문서와 관련 없는 질문에는 답변하지 않습니다.
 
 ### 예시
-**질문:** "계약 종료 조건에 대해 알려주세요."
-**답변:** "계약 종료 조건은 '협약서 2023' 문서의 12페이지에 명시되어 있습니다. 해당 조건은 다음과 같습니다: [...]"
+ **질문:** "계약 종료 조건에 대해 알려주세요."
+ **답변:** "계약 종료 조건은 다음과 같습니다: [...]"
+ **파일명:** "contract_2023.pdf"
+ **페이지:** "12"
+ **단편:** "계약 종료는 양 당사자의 서면 동의에 의해 가능합니다."
 
-**질문:** "이 계약서의 갱신 절차는 무엇인가요?"
-**답변:** "갱신 절차는 '협약서 2023' 문서의 8페이지에 상세히 기술되어 있습니다. 주요 단계는 다음과 같습니다: [...]" """,
-            }
-        ],
+ **질문:** "보고서의 1분기 매출은 얼마인가요?"
+ **답변:** "1분기 매출은 12% 증가했습니다."
+ **파일명:** "financial_report_2024.pdf"
+ **페이지:** "5"
+ **단편:** "2024년 1분기 매출은 12% 증가하며 $1.2M에 도달했습니다." """,
+        model="gpt-4o",
+        tools=[{"type": "file_search"}],
+        tool_resources={"file_search": {"vector_store_ids": [vector_store.id]}},
     )
+    # 새로운 스레드 생성
+    thread = client.beta.threads.create()
     response = (CustomResponse.builder() \
                 .set_data({
         'thread_id': thread.id,
