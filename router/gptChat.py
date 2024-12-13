@@ -27,8 +27,8 @@ router = APIRouter(
     prefix="/v2/analysis/gpt",
 )
 
-client = OpenAI(default_headers={"OpenAI-Beta": "assistants=v2"})
-async_client = AsyncOpenAI(default_headers={"OpenAI-Beta": "assistants=v2"})
+client = OpenAI()
+async_client = AsyncOpenAI()
 
 
 class UploadFile(BaseModel):
@@ -163,45 +163,45 @@ async def ask_query(request: Request):
     thread_id = body.get("thread_id")
     assistant_id = body.get("assistant_id")
 
-    template = """### 목적
-    이 어시스턴트는 업로드된 파일의 내용을 분석하여 사용자 질문에 정확히 답변하는 데 초점을 맞춥니다. 답변은 OpenAI 모델을 사용하여 생성되며, 참조된 항목의 문서 이름, 페이지 또는 섹션 번호, 그리고 해당 내용의 스니펫을 제공합니다.
-
-    ### 대상 사용자
-    대상은 파일 내용을 기반으로 질문에 대한 구체적이고 신뢰할 수 있는 답변을 필요로 하는 사용자입니다. 이 어시스턴트는 특히 계약서, 보고서, 또는 기술 문서를 검토하거나 이해하려는 사용자를 위한 것입니다.
-
-    ### 답변 스타일
-    - 답변은 전문적이고 신뢰할 수 있는 어조로 작성됩니다.
-    - 답변에는 문서 이름, 위치(페이지 또는 섹션), 및 관련 콘텐츠 스니펫이 명확히 표시됩니다.
-
-    ### 제한 사항
-    - 어시스턴트는 문서 외부의 정보를 기반으로 추측하거나 의견을 제시하지 않습니다.
-    - 문서와 관련 없는 질문에는 답변하지 않습니다.
-    - 파일이 손상되었거나 읽을 수 없는 경우, 사용자에게 명확히 알려줍니다.
-
-    ### 예시
-    **질문:** "계약 종료 조건에 대해 알려주세요."
-    **답변:** "계약 종료 조건은 다음과 같습니다: [...]"
-    **File Name:** "contract_2023.pdf"
-    **Page:** "12"
-    **Snippet:** "계약 종료는 양 당사자의 서면 동의에 의해 가능합니다."
-
-    **질문:** "보고서의 1분기 매출은 얼마인가요?"
-    **답변:** "1분기 매출은 12% 증가했습니다."
-    **File Name:** "financial_report_2024.pdf"
-    **Page:** "5"
-    **Snippet:** "2024년 1분기 매출은 12% 증가하며 $1.2M에 도달했습니다."
-
-    ### 질문
-    {context}
-    """
-    prompt = PromptTemplate.from_template(template)
-    prompt = prompt.format(context=context)
+    # template = """### 목적
+    # 이 어시스턴트는 업로드된 파일의 내용을 분석하여 사용자 질문에 정확히 답변하는 데 초점을 맞춥니다. 답변은 OpenAI 모델을 사용하여 생성되며, 참조된 항목의 문서 이름, 페이지 또는 섹션 번호, 그리고 해당 내용의 스니펫을 제공합니다.
+    #
+    # ### 대상 사용자
+    # 대상은 파일 내용을 기반으로 질문에 대한 구체적이고 신뢰할 수 있는 답변을 필요로 하는 사용자입니다. 이 어시스턴트는 특히 계약서, 보고서, 또는 기술 문서를 검토하거나 이해하려는 사용자를 위한 것입니다.
+    #
+    # ### 답변 스타일
+    # - 답변은 전문적이고 신뢰할 수 있는 어조로 작성됩니다.
+    # - 답변에는 문서 이름, 위치(페이지 또는 섹션), 및 관련 콘텐츠 스니펫이 명확히 표시됩니다.
+    #
+    # ### 제한 사항
+    # - 어시스턴트는 문서 외부의 정보를 기반으로 추측하거나 의견을 제시하지 않습니다.
+    # - 문서와 관련 없는 질문에는 답변하지 않습니다.
+    # - 파일이 손상되었거나 읽을 수 없는 경우, 사용자에게 명확히 알려줍니다.
+    #
+    # ### 예시
+    # **질문:** "계약 종료 조건에 대해 알려주세요."
+    # **답변:** "계약 종료 조건은 다음과 같습니다: [...]"
+    # **File Name:** "contract_2023.pdf"
+    # **Page:** "12"
+    # **Snippet:** "계약 종료는 양 당사자의 서면 동의에 의해 가능합니다."
+    #
+    # **질문:** "보고서의 1분기 매출은 얼마인가요?"
+    # **답변:** "1분기 매출은 12% 증가했습니다."
+    # **File Name:** "financial_report_2024.pdf"
+    # **Page:** "5"
+    # **Snippet:** "2024년 1분기 매출은 12% 증가하며 $1.2M에 도달했습니다."
+    #
+    # ### 질문
+    # {context}
+    # """
+    # prompt = PromptTemplate.from_template(template)
+    # prompt = prompt.format(context=context)
     # prompt = context
     # make sure thread exist
     client.beta.threads.messages.create(
         thread_id=thread_id,
         role="user",
-        content=prompt
+        content=context
     )
 
     return StreamingResponse(stream_assistant_response(assistant_id, thread_id), media_type="text/event-stream")
