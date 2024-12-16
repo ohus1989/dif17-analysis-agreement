@@ -12,7 +12,6 @@ from pydantic import BaseModel, Field
 from requests import get
 
 from config.dbConfig import DB_CONFIG
-from vo.InsuranceItemQueryParams import InsuranceItemQueryParams
 from vo.CustomResponse import CustomResponse, ErrorCode
 
 # 로깅 설정
@@ -29,14 +28,9 @@ async def root():
     return {"message": "Hello World"}
 
 
-@router.post("/insurance/")
+@router.get("/insurance/")
 async def get_primary_insurance_product(request: Request):
-    body = await request.json()
-    insurance_product = {
-        "name": body.get("name"),
-        "sale_date": body.get("sale_date"),
-        "p_code": body.get("p_code"),
-    }
+    insurance_product = dict(request.query_params)
     query = """
         SELECT A.*,
                    B_0.file_path AS summary_file_path,
@@ -81,13 +75,9 @@ async def get_primary_insurance_product(request: Request):
         return f"데이터베이스 오류: {e}"
 
 
-@router.post("/insurance/item/")
-async def get_primary_insurance_product(insuranceItemQueryParams: InsuranceItemQueryParams):
-    insurance_product = {
-        "name": insuranceItemQueryParams.name,
-        "sale_date": insuranceItemQueryParams.sale_date,
-        "p_code": insuranceItemQueryParams.p_code,
-    }
+@router.get("/insurance/item/")
+async def get_primary_insurance_product(request: Request):
+    insurance_product = dict(request.query_params)
     query = """
         SELECT A.*,
                    B_0.file_path AS summary_file_path,
